@@ -1,3 +1,7 @@
+dialog {
+    animation: fade-in 0.25s ease-out;
+}
+
 dialog[open] {
 
     position: fixed;
@@ -19,6 +23,8 @@ dialog[open] {
     /* reset default dialog styles */
     border: none;
     padding: 0;
+
+    animation: fade-in 0.25s ease-out reverse;
 
 }
 
@@ -54,3 +60,14 @@ header {
 #buttonPanel button {
     margin: 0 0.25rem;
 }
+
+@keyframes fade-in {
+    0% {
+        top: 15vh;
+    }
+  
+    100% {   
+        top: 10vh;
+    }
+}
+  
