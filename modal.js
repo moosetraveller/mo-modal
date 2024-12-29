@@ -29,6 +29,10 @@ class Modal extends HTMLElement {
         return this.getAttribute('keyboard') !== 'false';
     }
 
+    get triggerElement() {
+        return this._triggerElement;
+    }
+
     constructor() {
         
         super();
@@ -119,8 +123,8 @@ class Modal extends HTMLElement {
         });
 
         this._modal = this.shadowRoot.querySelector('#modal');
-        EH.attach('keyup', this._modal, () => {
-            if (this.isAcceptingEscapeKey) {
+        EH.attach('keyup', this._modal, event => {
+            if (this.isAcceptingEscapeKey && event.key === 'Escape') {
                 this.close();
             }
         });
@@ -130,7 +134,7 @@ class Modal extends HTMLElement {
             if (this.hasCloseableBackdrop) {
                 this.close();
             }
-            else if (this.hasBackdrop) {
+            else if (this.hasBackdrop && this.isAcceptingEscapeKey) {
                 this._modal.focus();  // redirect focus to modal
             }
         });
@@ -162,14 +166,22 @@ class Modal extends HTMLElement {
         this.removeAttribute('opened');
     }
 
+    toggle() {
+        this.isOpen ? this.close() : this.open();
+    }
+
     attributeChangedCallback(name, oldValue, newValue) {
 
         if (name === 'opened' && oldValue !== newValue) {
             if (this.hasAttribute('opened')) {
+                if (!this.shadowRoot.contains(document.activeElement)) {
+                    this._triggerElement = document.activeElement;
+                }
                 this._modal.focus();
                 this._emitOpenedEvent();
             }
             else {
+                this._triggerElement?.focus();
                 this._emitClosedEvent();
             }
         }
