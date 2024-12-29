@@ -36,6 +36,7 @@ class Modal extends HTMLElement {
     constructor() {
         
         super();
+
         this.attachShadow({mode: 'open'});
 
         this.shadowRoot.innerHTML = `
@@ -92,13 +93,25 @@ class Modal extends HTMLElement {
 
         Modal._styleSheet
             .then(sheet => {
+
                 this.shadowRoot.adoptedStyleSheets = [
                     ...(this.shadowRoot.adoptedStyleSheets || []),
                     sheet,
                 ];
-                // remove the initial (temporary) style
-                const initStyle = this.shadowRoot.querySelector('#initialStyle');
-                initStyle?.remove();
+                
+                // requestAnimationFrame(() => {
+                //     // remove the initial (temporary) style
+                //     const initStyle = this.shadowRoot.querySelector('#initialStyle');
+                //     initStyle?.remove();
+                // });
+                
+                EH.attach('open.initialize', this, () => {
+                    const initStyle = this.shadowRoot.querySelector('#initialStyle');
+                    initStyle?.remove();
+                    EH.detach('open.initialize', this);
+                });
+
+
             });
 
     }
