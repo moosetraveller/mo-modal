@@ -22,7 +22,7 @@
     </head>
     <body>
         
-        <mo-modal id="firstModal" backdrop="static" keyboard="false">
+        <mo-modal id="firstModal" backdrop="true" keyboard="false">
             <h1 slot="title">First Modal</h1>
             <p>Do you want to see the second modal?</p>
         </mo-modal>
@@ -36,7 +36,7 @@
         <button>Click me</button>
 
         <script>
-            
+
             const confirmButton = document.querySelector('button');
             const modal = document.querySelector('#firstModal');
             confirmButton.addEventListener('click', () => {
