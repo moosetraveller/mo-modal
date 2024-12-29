@@ -13,7 +13,8 @@ export class EventHandler {
     static _abortControllers = new WeakMap();
 
     /**
-     * Attach an event listener for the given event type to the given event target.
+     * Attach an event listener for the given event type to the given event target. Enhance your event type
+     * with a name, if you want to add more than one event listener for the same event type.
      * 
      * @param {string} eventType the event type, optionally followed by a name separated by a dot (.)
      * @param {EventTarget} eventTarget the event target where the event listener will be attached
@@ -24,6 +25,9 @@ export class EventHandler {
         if (!(eventTarget instanceof EventTarget)) {
             return;
         }
+
+        // make sure there is only one event listener for the given event type
+        EventHandler.detach(eventType, eventTarget);
 
         const controller = new AbortController();
 
@@ -53,10 +57,16 @@ export class EventHandler {
             const controllers = this._abortControllers.get(eventTarget) ?? false;
 
             if (controllers === false) {
+                // no event listener for the given event target
                 continue;
             }
 
-            const controller = controllers.get(eventType);
+            const controller = controllers.get(eventType) ?? false;
+
+            if (controller === false) {
+                // no event listener for the given event type
+                continue;
+            }
             
             controller.abort();
 
@@ -84,6 +94,7 @@ export class EventHandler {
             const controllers = this._abortControllers.get(eventTarget) ?? false;
 
             if (controllers === false) {
+                // no event listener for the given event target
                 continue;
             }
 
