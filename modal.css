@@ -6,10 +6,6 @@ dialog[open] {
 
     position: fixed;
 
-    top: 15vh;
-    
-    transform: translateY(-50%);
-
     /* min, preferred, max */
     width: clamp(300px, 50%, 600px);
 
@@ -63,11 +59,11 @@ header {
 
 @keyframes fade-in {
     0% {
-        top: 15vh;
+        top: 0;
     }
   
     100% {   
-        top: 10vh;
+        top: -5vh;
     }
 }
   
