@@ -4,7 +4,8 @@
 import { EventHandler as EH, loadStyleSheet } from "./utils.js";
 
 /**
- * A simple Modal that could be used to confirm something.
+ * A simple Modal that could be used to confirm something. This implementation wraps a
+ * <dialog> element. 
  */
 class Modal extends HTMLElement {
 
@@ -14,11 +15,7 @@ class Modal extends HTMLElement {
     static _eventBus = new EventTarget();
 
     get isOpen() {
-        return this.hasAttribute('opened');
-    }
-
-    get hasCloseableBackdrop() {
-        return !['static', 'false'].includes(this.getAttribute('backdrop'));
+        return this.hasAttribute('open');
     }
 
     get hasBackdrop() {
@@ -42,18 +39,12 @@ class Modal extends HTMLElement {
         this.shadowRoot.innerHTML = `
 
             <style id="initialStyle">
-                
-                /* initial style; will be removed when 
-                   CSS style sheet was loaded */
-
                 :host {
                     display: none;
                 }
-                
             </style>
-
-            <div id="backdrop"></div>
-            <div id="modal" tabindex="0">
+            
+            <dialog>
 
                 <header>
                     <slot name="title">Please Confirm</slot>
@@ -68,7 +59,7 @@ class Modal extends HTMLElement {
                     <button id="confirmButton">Confirm</button>
                 </section>
 
-            </div>
+            </dialog>
 
         `;
 
@@ -127,38 +118,60 @@ class Modal extends HTMLElement {
         EH.attach(`open.${this._uuid}`, Modal._eventBus, this._enforceExclusiveness.bind(this));
         
         this._cancelButton = this.shadowRoot.querySelector('#cancelButton');
-        EH.attach('click.cancel', this._cancelButton, (event) => {
+        EH.attach('click.cancel', this._cancelButton, event => {
             this.close();
             this._emitCancelEvent(event);
         });
 
         this._confirmButton = this.shadowRoot.querySelector('#confirmButton');
-        EH.attach('click.confirm', this._confirmButton, (event) => {
+        EH.attach('click.confirm', this._confirmButton, event => {
             this.close();
             this._emitConfirmEvent(event);
         });
 
-        this._modal = this.shadowRoot.querySelector('#modal');
-        EH.attach('keyup', this._modal, event => {
-            if (this.isAcceptingEscapeKey && event.key === 'Escape') {
+        this._dialog = this.shadowRoot.querySelector('dialog');
+        EH.attach('cancel', this._dialog, event => {
+            if (this.isAcceptingEscapeKey) {
                 this.close();
             }
+            event.preventDefault();
         });
 
-        this._backdrop = this.shadowRoot.querySelector('#backdrop');
-        EH.attach('click', this._backdrop, () => {
-            if (this.hasCloseableBackdrop) {
-                this.close();
-            }
-            else if (this.hasBackdrop && this.isAcceptingEscapeKey) {
-                this._modal.focus();  // redirect focus to modal
-            }
-        });
-
-        this.setAttribute('role', 'dialog');
-        this.setAttribute('aria-modal', true);
+        this._ensureSyncWithDialogElement();
 
         this._render();
+
+    }
+
+    /**
+     * Adds logic to make sure the <dialog> element is in sync with the
+     * custom element itself.
+     */
+    _ensureSyncWithDialogElement() {
+
+        EH.attach('close', this._dialog, () => {
+            if (this.isOpen) {
+                this.close();
+            }
+        });
+
+        const showFn = this._dialog.show;
+        this._dialog.show = () => {
+            if (this._dialog.open === this.isOpen) {
+                this.open();
+                return;
+            }
+            showFn.call(this._dialog);
+        }
+
+        const showModalFn = this._dialog.showModal;
+        this._dialog.showModal = () => {
+            if (this._dialog.open === this.isOpen) {
+                this.open();
+                return;
+            }
+            showModalFn.call(this._dialog);
+        }
 
     }
 
@@ -168,7 +181,7 @@ class Modal extends HTMLElement {
      * this method in case a reference is kept outside of the element. 
      */
     disconnectedCallback() {
-        EH.detachAll(this._confirmButton, this._cancelButton, this._backdrop, this._modal);
+        EH.detachAll(this._confirmButton, this._cancelButton, this._backdrop, this._modal, this._dialog);
         // if we wouldn't remove the following listener explicitly, it would remain
         EH.detach(`open.${this._uuid}`, Modal._eventBus);
     }
@@ -195,14 +208,14 @@ class Modal extends HTMLElement {
      * Opens the modal.
      */
     open() {
-        this.setAttribute('opened', '');
+        this.setAttribute('open', '');
     }
 
     /**
      * Closes the modal.
      */
     close() {
-        this.removeAttribute('opened');
+        this.removeAttribute('open');
     }
 
     /**
@@ -222,18 +235,25 @@ class Modal extends HTMLElement {
      */
     attributeChangedCallback(name, oldValue, newValue) {
 
-        if (name === 'opened' && oldValue !== newValue) {
-            if (this.hasAttribute('opened')) {
+        if (name === 'open' && oldValue !== newValue) {
+
+            if (this.hasAttribute('open')) {
+
                 if (!this.shadowRoot.contains(document.activeElement)) {
                     this._triggerElement = document.activeElement;
                 }
-                this._modal.focus();
-                this._emitOpenedEvent();
+
+                this.hasBackdrop ? this._dialog.showModal() : this._dialog.show();
+
+                this._emitOpenEvent();
+
             }
             else {
+                this._dialog.close();
                 this._triggerElement?.focus();
-                this._emitClosedEvent();
+                this._emitCloseEvent();
             }
+
         }
 
         this._render();
@@ -245,13 +265,13 @@ class Modal extends HTMLElement {
      * `attributeChangedCallback` is called, otherwise, the method is not.
      */
     static get observedAttributes() {
-        return ['opened', 'confirmText'];
+        return ['open', 'confirmText'];
     }
 
     /**
      * Emits a custom event `open`.
      */
-    _emitOpenedEvent() {
+    _emitOpenEvent() {
         const event = new CustomEvent('open', { detail: { uuid: this._uuid } });
         this.dispatchEvent(event);
         Modal._eventBus.dispatchEvent(event);
@@ -260,7 +280,7 @@ class Modal extends HTMLElement {
     /**
      * Emits a custom event `close`.
      */
-    _emitClosedEvent() {
+    _emitCloseEvent() {
         // triggered on the custom component itself and not within the shadow DOM
         this.dispatchEvent(new CustomEvent('close'));
     }
