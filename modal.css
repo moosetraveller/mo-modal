@@ -20,6 +20,10 @@
     z-index: 10;
 }
 
+:host([backdrop="false"]) #backdrop {
+    display: none;
+}
+
 #modal {
     
     position: fixed;
