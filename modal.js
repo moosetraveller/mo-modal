@@ -103,6 +103,10 @@ class Modal extends HTMLElement {
 
     }
 
+    /**
+     * This life cycle hook is called when the element is attached to the DOM and ready 
+     * to be manipulated.
+     */
     connectedCallback() {
 
         // using helper function EH.attach to add event listeners, in order to remove
@@ -143,33 +147,64 @@ class Modal extends HTMLElement {
 
     }
 
+    /**
+     * This life cycle hook is called when the custom element is detached from the DOM. Although
+     * the event listeners will be removed automatically, it's good practice to do this within
+     * this method in case a reference is kept outside of the element. 
+     */
     disconnectedCallback() {
         EH.detachAll(this._confirmButton, this._cancelButton, this._backdrop, this._modal);
+        // if we wouldn't remove the following listener explicitly, it would remain
         EH.detach(`open.${this._uuid}`, Modal._eventBus);
     }
 
+    /**
+     * Renders this component.
+     */
     _render() {
         this._confirmButton.textContent = this.getAttribute('confirmText') ?? 'Confirm';
     }
 
+    /**
+     * Closes the modal if the event's source (another modal) is not the current one.
+     * 
+     * @param {CustomEvent} event 
+     */
     _enforceExclusiveness(event) {
         if (this.isOpen && event.detail.uuid !== this._uuid) {
             this.close();
         }
     }
 
+    /**
+     * Opens the modal.
+     */
     open() {
         this.setAttribute('opened', '');
     }
 
+    /**
+     * Closes the modal.
+     */
     close() {
         this.removeAttribute('opened');
     }
 
+    /**
+     * Toggles the visibility of the modal. If open, the modal will be closed
+     * and vice versa.
+     */
     toggle() {
         this.isOpen ? this.close() : this.open();
     }
 
+    /**
+     * This life cycle hook is called when the value of an observed attribute is changed.
+     * 
+     * @param {string} name attribute name (must be included in `observedAttributes`)
+     * @param {string} oldValue old/previous value
+     * @param {string} newValue new/next value
+     */
     attributeChangedCallback(name, oldValue, newValue) {
 
         if (name === 'opened' && oldValue !== newValue) {
@@ -190,21 +225,34 @@ class Modal extends HTMLElement {
 
     }
 
+    /**
+     * Returns an array of observed attributes. When these attributes change
+     * `attributeChangedCallback` is called, otherwise, the method is not.
+     */
     static get observedAttributes() {
         return ['opened', 'confirmText'];
     }
 
+    /**
+     * Emits a custom event `open`.
+     */
     _emitOpenedEvent() {
         const event = new CustomEvent('open', { detail: { uuid: this._uuid } });
         this.dispatchEvent(event);
         Modal._eventBus.dispatchEvent(event);
     }
 
+    /**
+     * Emits a custom event `close`.
+     */
     _emitClosedEvent() {
         // triggered on the custom component itself and not within the shadow DOM
         this.dispatchEvent(new CustomEvent('close'));
     }
 
+    /**
+     * Emits a custom event `cancel`.
+     */
     _emitCancelEvent(clickEvent) {
         // we bubble the event up to the custom component itself
         // if composed is false, the event won't leave the shadow DOM even if bubbles: true
@@ -212,6 +260,9 @@ class Modal extends HTMLElement {
         clickEvent.target.dispatchEvent(new CustomEvent('cancel', { bubbles: true, composed: true }));
     }
 
+    /**
+     * Emits a custom event `confirm`.
+     */
     _emitConfirmEvent(clickEvent) {
         clickEvent.target.dispatchEvent(new CustomEvent('confirm', { bubbles: true, composed: true }));
     }
