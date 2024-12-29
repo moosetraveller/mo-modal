@@ -21,6 +21,14 @@ class Modal extends HTMLElement {
         return !['static', 'false'].includes(this.getAttribute('backdrop'));
     }
 
+    get hasBackdrop() {
+        return this.getAttribute('backdrop') !== 'false';
+    }
+
+    get isAcceptingEscapeKey() {
+        return this.getAttribute('keyboard') !== 'false';
+    }
+
     constructor() {
         
         super();
@@ -40,7 +48,7 @@ class Modal extends HTMLElement {
             </style>
 
             <div id="backdrop"></div>
-            <div id="modal">
+            <div id="modal" tabindex="0">
 
                 <header>
                     <slot name="title">Please Confirm</slot>
@@ -96,7 +104,7 @@ class Modal extends HTMLElement {
         // using helper function EH.attach to add event listeners, in order to remove
         // them easily when disconnectedCallback is called
 
-        EH.attach('open', Modal._eventBus, this._enforceExclusiveness.bind(this));
+        EH.attach(`open.${this._uuid}`, Modal._eventBus, this._enforceExclusiveness.bind(this));
         
         this._cancelButton = this.shadowRoot.querySelector('#cancelButton');
         EH.attach('click.cancel', this._cancelButton, (event) => {
@@ -110,10 +118,20 @@ class Modal extends HTMLElement {
             this._emitConfirmEvent(event);
         });
 
+        this._modal = this.shadowRoot.querySelector('#modal');
+        EH.attach('keyup', this._modal, () => {
+            if (this.isAcceptingEscapeKey) {
+                this.close();
+            }
+        });
+
         this._backdrop = this.shadowRoot.querySelector('#backdrop');
         EH.attach('click', this._backdrop, () => {
             if (this.hasCloseableBackdrop) {
-                this.close()
+                this.close();
+            }
+            else if (this.hasBackdrop) {
+                this._modal.focus();  // redirect focus to modal
             }
         });
 
@@ -122,8 +140,8 @@ class Modal extends HTMLElement {
     }
 
     disconnectedCallback() {
-        EH.detachAll(this._confirmButton, this._cancelButton, this._backdrop);
-        EH.detach('open', Modal._eventBus);
+        EH.detachAll(this._confirmButton, this._cancelButton, this._backdrop, this._modal);
+        EH.detach(`open.${this._uuid}`, Modal._eventBus);
     }
 
     _render() {
@@ -148,6 +166,7 @@ class Modal extends HTMLElement {
 
         if (name === 'opened' && oldValue !== newValue) {
             if (this.hasAttribute('opened')) {
+                this._modal.focus();
                 this._emitOpenedEvent();
             }
             else {
