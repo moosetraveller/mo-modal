@@ -98,7 +98,7 @@ class Modal extends HTMLElement {
                     ...(this.shadowRoot.adoptedStyleSheets || []),
                     sheet,
                 ];
-                
+
                 // requestAnimationFrame(() => {
                 //     // remove the initial (temporary) style
                 //     const initStyle = this.shadowRoot.querySelector('#initialStyle');
@@ -110,7 +110,6 @@ class Modal extends HTMLElement {
                     initStyle?.remove();
                     EH.detach('open.initialize', this);
                 });
-
 
             });
 
@@ -155,6 +154,9 @@ class Modal extends HTMLElement {
                 this._modal.focus();  // redirect focus to modal
             }
         });
+
+        this.setAttribute('role', 'dialog');
+        this.setAttribute('aria-modal', true);
 
         this._render();
 
