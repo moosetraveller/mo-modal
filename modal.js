@@ -17,6 +17,10 @@ class Modal extends HTMLElement {
         return this.hasAttribute('opened');
     }
 
+    get hasCloseableBackdrop() {
+        return !['static', 'false'].includes(this.getAttribute('backdrop'));
+    }
+
     constructor() {
         
         super();
@@ -107,7 +111,11 @@ class Modal extends HTMLElement {
         });
 
         this._backdrop = this.shadowRoot.querySelector('#backdrop');
-        EH.attach('click', this._backdrop, () => this.close());
+        EH.attach('click', this._backdrop, () => {
+            if (this.hasCloseableBackdrop) {
+                this.close()
+            }
+        });
 
         this._render();
 
