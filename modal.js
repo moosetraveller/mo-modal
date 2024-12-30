@@ -3,11 +3,13 @@
 
 import { EventHandler as EH, loadStyleSheet } from "./utils.js";
 
+export const TAG_NAME = 'mo-modal';
+
 /**
  * A simple Modal that could be used to confirm something. This implementation wraps a
  * <dialog> element. 
  */
-class Modal extends HTMLElement {
+export class Modal extends HTMLElement {
 
     static _modalStyleSheet = null;
 
@@ -105,16 +107,16 @@ class Modal extends HTMLElement {
             });
 
         // add global stylesheet; only once
-        if (document.querySelector('style[data-component="mo-modal"]') === null) {
+        if (document.querySelector(`style[data-component="${TAG_NAME}"]`) === null) {
             
             const style = document.createElement('style');
-            style.setAttribute('data-component', 'mo-modal');
+            style.setAttribute('data-component', TAG_NAME);
             
             document.head.appendChild(style);
 
             // this rule will not be visible within the style tag when looked up 
             // using the web developer console
-            style.sheet.insertRule('body:has(mo-modal[open]) { overflow: hidden; }', 0);
+            style.sheet.insertRule(`body:has(${TAG_NAME}[open]) { overflow: hidden; }`, 0);
             
         }
 
@@ -318,4 +320,4 @@ class Modal extends HTMLElement {
 
 }
 
-customElements.define('mo-modal', Modal);
+customElements.define(TAG_NAME, Modal);
