@@ -9,9 +9,9 @@ import { EventHandler as EH, loadStyleSheet } from "./utils.js";
  */
 class Modal extends HTMLElement {
 
-    static _styleSheet = null;
+    static _modalStyleSheet = null;
 
-    /** for communication between modals */
+    /* for communication between modals */
     static _eventBus = new EventTarget();
 
     get isOpen() {
@@ -78,11 +78,11 @@ class Modal extends HTMLElement {
      */
     async _insertStyleSheet(url) {
 
-        if (Modal._styleSheet === null) {
-            Modal._styleSheet = loadStyleSheet(url);
+        if (Modal._modalStyleSheet === null) {
+            Modal._modalStyleSheet = loadStyleSheet(url);
         }
 
-        Modal._styleSheet
+        Modal._modalStyleSheet
             .then(sheet => {
 
                 this.shadowRoot.adoptedStyleSheets = [
@@ -103,6 +103,20 @@ class Modal extends HTMLElement {
                 });
 
             });
+
+        // add global stylesheet; only once
+        if (document.querySelector('style[data-component="mo-modal"]') === null) {
+            
+            const style = document.createElement('style');
+            style.setAttribute('data-component', 'mo-modal');
+            
+            document.head.appendChild(style);
+
+            // this rule will not be visible within the style tag when looked up 
+            // using the web developer console
+            style.sheet.insertRule('body:has(mo-modal[open]) { overflow: hidden; }', 0);
+            
+        }
 
     }
 
