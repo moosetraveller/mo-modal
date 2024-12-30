@@ -4,10 +4,8 @@ dialog {
 
 dialog[open] {
 
-    position: fixed;
-
     /* min, preferred, max */
-    width: clamp(300px, 50%, 600px);
+    width: clamp(500px, 50%, 600px);
 
     background: white;
     border-radius: 3px;
@@ -22,6 +20,12 @@ dialog[open] {
 
     animation: fade-in 0.25s ease-out reverse;
 
+}
+
+@media (max-width: 500px) {
+    dialog[open] {
+        width: 100%;
+    }
 }
 
 :host([backdrop="false"]) dialog[open] {
@@ -44,6 +48,7 @@ header {
 
 #content {
     padding: 1rem;
+    overflow: auto;
 }
 
 #buttonPanel {
