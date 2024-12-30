@@ -157,7 +157,9 @@ export class Modal extends HTMLElement {
             event.preventDefault();
         });
 
-        EH.attach('click', this._dialog, event => {
+        // we are not using click because moving the mouse; see here:
+        // https://stackoverflow.com/a/72916231/42659
+        EH.attach('mousedown', this._dialog, event => {
             if (!this.hasStaticBackdrop && event.target.contains(this._dialog)) {
                 this.close();
             }
