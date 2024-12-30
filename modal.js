@@ -24,6 +24,10 @@ export class Modal extends HTMLElement {
         return this.getAttribute('backdrop') !== 'false';
     }
 
+    get hasStaticBackdrop() {
+        return this.getAttribute('backdrop') === 'static';
+    }
+
     get isAcceptingEscapeKey() {
         return this.getAttribute('keyboard') !== 'false';
     }
@@ -151,6 +155,12 @@ export class Modal extends HTMLElement {
                 this.close();
             }
             event.preventDefault();
+        });
+
+        EH.attach('click', this._dialog, event => {
+            if (!this.hasStaticBackdrop && event.target.contains(this._dialog)) {
+                this.close();
+            }
         });
 
         this._ensureSyncWithDialogElement();
