@@ -44,8 +44,8 @@ export class Modal extends HTMLElement {
 
         this.shadowRoot.innerHTML = `
 
-            <style id="initialStyle">
-                :host {
+            <style>
+                :host(:not(:defined)) dialog {
                     display: none;
                 }
             </style>
@@ -95,18 +95,6 @@ export class Modal extends HTMLElement {
                     ...(this.shadowRoot.adoptedStyleSheets || []),
                     sheet,
                 ];
-
-                // requestAnimationFrame(() => {
-                //     // remove the initial (temporary) style
-                //     const initStyle = this.shadowRoot.querySelector('#initialStyle');
-                //     initStyle?.remove();
-                // });
-                
-                EH.attach('open.initialize', this, () => {
-                    const initStyle = this.shadowRoot.querySelector('#initialStyle');
-                    initStyle?.remove();
-                    EH.detach('open.initialize', this);
-                });
 
             });
 
